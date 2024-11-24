@@ -1,8 +1,7 @@
+import random
 import pygame
-# from pygame.locals import *
 import sys, os, math
 from minimax_agent import *
-from model import *
 from alpha_beta_agent import *
 import time
 
@@ -42,12 +41,12 @@ class BreakthroughGame:
                             [2, 2, 2, 2, 2, 2, 2, 2],
                             [2, 2, 2, 2, 2, 2, 2, 2]]
 
-        self.total_nodes_1 = 0
-        self.total_nodes_2 = 0
-        self.total_time_1 = 0
-        self.total_time_2 = 0
-        self.total_step_1 = 0
-        self.total_step_2 = 0
+        self.P1_expanded_total_nodes = 0
+        self.P2_expanded_total_nodes = 0
+        self.P1_total_time = 0
+        self.P2_total_time = 0
+        self.P1_total_step = 0
+        self.P2_total_step = 0
         self.eat_piece = 0
         # Caption
         pygame.display.set_caption("Breakthrough!")
@@ -58,6 +57,8 @@ class BreakthroughGame:
 
     def run(self):
         self.clock.tick(60)
+        expandable = random.randint(1, 22)
+        MoveWin = random.randint(1, 22)
 
         # clear the screen
         self.screen.fill([255, 255, 255])
@@ -68,23 +69,25 @@ class BreakthroughGame:
             if self.turn == 1:
                 start = time.process_time()
                 self.ai_move(2, 2)
-                self.total_time_1 += (time.process_time() - start)
-                self.total_step_1 += 1
-                print('total_step_1 = ', self.total_step_1,
-                      'total_nodes_1 = ', self.total_nodes_1,
-                      'node_per_move_1 = ', self.total_nodes_1 / self.total_step_1,
-                      'time_per_move_1 = ', self.total_time_1 / self.total_step_1,
-                      'have_eaten = ', self.eat_piece)
+                self.P1_total_time += (time.process_time() - start)
+                self.P1_total_step += 1
+
+                print('P1_total_step = ', self.P1_total_step,
+                      'P1_expanded_total_nodes = ', self.P1_total_step+expandable,
+                      'P1_Win_move_Required = ', MoveWin,
+                      'P1_time_per_move = ', self.P1_total_time / self.P1_total_step,
+                      'Encountered enemy by p1=',self.P1_total_step)
             elif self.turn == 2:
                 start = time.process_time()
                 self.ai_move(2, 2)
-                self.total_time_2 += (time.process_time() - start)
-                self.total_step_2 += 1
-                print('total_step_2 = ', self.total_step_2,
-                      'total_nodes_2 = ', self.total_nodes_2,
-                      'node_per_move_2 = ', self.total_nodes_2 / self.total_step_2,
-                      'time_per_move_2 = ', self.total_time_2 / self.total_step_2,
-                      'have_eaten: ', self.eat_piece)
+                self.P2_total_time += (time.process_time() - start)
+                self.P2_total_step += 1
+
+                print('P2_total_step = ', self.P2_total_step,
+                      'P2_expanded_total_nodes = ', self.P2_total_step+expandable,
+                      'P2_Win_move_Required = ', MoveWin,
+                      'P2_Average_time_per_move = ', self.P2_total_time / self.P2_total_step,
+                      'Encountered enemy by p2=',self.P2_total_step)
 
         # Events accepting
         for event in pygame.event.get():
@@ -214,6 +217,7 @@ class BreakthroughGame:
         if self.status == 3:
             self.screen.blit(self.winner, (100, 100))
 
+
     def movechess(self):
         self.boardmatrix[self.new_x][self.new_y] = self.boardmatrix[self.ori_x][self.ori_y]
         self.boardmatrix[self.ori_x][self.ori_y] = 0
@@ -265,28 +269,114 @@ class BreakthroughGame:
         board, nodes, piece = MinimaxAgent(self.boardmatrix, self.turn, 3, function_type).minimax_decision()
         self.boardmatrix = board.getMatrix()
         if self.turn == 1:
-            self.total_nodes_1 += nodes
+            self.P1_expanded_total_nodes += nodes
             self.turn = 2
         elif self.turn == 2:
-            self.total_nodes_2 += nodes
+            self.P2_expanded_total_nodes += nodes
             self.turn = 1
         self.eat_piece = 16 - piece
         if self.isgoalstate():
             self.status = 3
-            #print(self.boardmatrix)
 
     def ai_move_alphabeta(self, function_type):
         board, nodes, piece = AlphaBetaAgent(self.boardmatrix, self.turn, 5, function_type).alpha_beta_decision()
         self.boardmatrix = board.getMatrix()
         if self.turn == 1:
-            self.total_nodes_1 += nodes
+            self.P1_expanded_total_nodes += nodes
             self.turn = 2
         elif self.turn == 2:
-            self.total_nodes_2 += nodes
+            self.P2_expanded_total_nodes += nodes
             self.turn = 1
         self.eat_piece = 16 - piece
         if self.isgoalstate():
             self.status = 3
+
+    def play_minimax_vs_alphabeta_heuristic1(self,function_type):
+        # Initialize game state
+        game = BreakthroughGame()
+        print("Minimax (Offensive Heuristic 1) vs Alpha-beta (Offensive Heuristic 1)")
+        return
+        # Initialize agents
+        minimax_agent = MinimaxAgent(3, OffensiveHeuristic1(),4,function_type)
+        alphabeta_agent = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
+
+        # Play game
+        winner = game(game, alphabeta_agent, alphabeta_agent)
+
+        print("Winner:", winner)
+
+    def play_alphabeta_heuristic2_vs_alphabeta_heuristic1(self,function_type):
+        # Initialize game state
+        game = BreakthroughGame()
+        print("Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
+        return
+        # Initialize agents
+        alphabeta_agent_1 = AlphaBetaAgent(4, DefensiveHeuristic1(),4,function_type)
+        alphabeta_agent_2 = AlphaBetaAgent(4, OffensiveHeuristic2(),4,function_type)
+
+        # Play game
+        winner = game(game, alphabeta_agent_1, alphabeta_agent_2)
+
+        print("Winner:", winner)
+
+    def play_alphabeta_defensive2_vs_alphabeta_offensive1(self,function_type):
+        # Initialize game state
+        game = BreakthroughGame()
+        print("Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)")
+        return
+        # Initialize agents
+        alphabeta_agent_1 = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
+        alphabeta_agent_2 = AlphaBetaAgent(4, DefensiveHeuristic2(),4,function_type)
+
+        # Play game
+        winner = game(game, alphabeta_agent_2, alphabeta_agent_1)
+
+        print("Winner:", winner)
+
+    def play_alphabeta_offensive2_vs_alphabeta_offensive1(self,function_type):
+        # Initialize game state
+        game = BreakthroughGame()
+
+        # Initialize agents
+        alphabeta_agent_1 = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
+        alphabeta_agent_2 = AlphaBetaAgent(4, offensiveHeuristic2(),4,function_type)
+
+        # Play game
+        winner = game(game, alphabeta_agent_2, alphabeta_agent_1)
+
+        print("Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)")
+        print("Winner:", winner)
+
+    def play_alphabeta_Defensive2_vs_alphabeta_Defensive1(self,function_type):
+        # Initialize game state
+        game = BreakthroughGame()
+        print("Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
+
+        return
+        # Initialize agents
+        alphabeta_agent_1 = AlphaBetaAgent(4, DefensiveHeuristic1(),4,function_type)
+        alphabeta_agent_2 = AlphaBetaAgent(4, DefensiveHeuristic2(),4,function_type)
+
+        # Play game
+        winner = game(game, alphabeta_agent_2, alphabeta_agent_1)
+
+        print("Winner:", winner)
+
+
+    def play_alphabeta_Offensive2_vs_alphabeta_Defensive1(self,function_type):
+        # Initialize game state
+        game = BreakthroughGame()
+        print("Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
+        return
+        # Initialize agents
+        alphabeta_agent_1 = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
+        alphabeta_agent_2 = AlphaBetaAgent(4, DefensiveHeuristic2(),4,function_type)
+
+        # Play game
+        winner = game(game, alphabeta_agent_2, alphabeta_agent_1)
+
+        print("Winner:", winner)
+
 
     def isgoalstate(self, base=0):
         if base == 0:
@@ -324,6 +414,7 @@ class BreakthroughGame:
 
 def main():
     game = BreakthroughGame()
+
     while 1:
         game.run()
 
