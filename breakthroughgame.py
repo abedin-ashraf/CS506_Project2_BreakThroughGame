@@ -5,6 +5,13 @@ from minimax_agent import *
 from alpha_beta_agent import *
 import time
 
+class Colors:
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
 class BreakthroughGame:
     def __init__(self):
         pygame.init()
@@ -30,6 +37,10 @@ class BreakthroughGame:
         self.ori_y = 0
         self.new_x = 0
         self.new_y = 0
+        self.total_time_1 = 0
+        self.total_time_2 = 0
+        self.total_step_1 = 0
+        self.total_step_2 = 0
 
         # matrix for position of chess, 0 - empty, 1 - black, 2 - white
         self.boardmatrix = [[1, 1, 1, 1, 1, 1, 1, 1],
@@ -48,6 +59,8 @@ class BreakthroughGame:
         self.P1_total_step = 0
         self.P2_total_step = 0
         self.eat_piece = 0
+        self.total_nodes_1 = 0
+        self.total_nodes_2 = 0
         # Caption
         pygame.display.set_caption("Breakthrough!")
 
@@ -64,30 +77,61 @@ class BreakthroughGame:
         self.screen.fill([255, 255, 255])
 
 
-        if self.status == 5:
-            # Black
+        if self.status in  [5,6,7,8,9,10]:
+            # Default search type is alpha-beta
+            player1search = 2
+            player2search = 2
+
+            # Matchup 1: Minimax (Offensive Heuristic 1) vs Alpha-beta (Offensive Heuristic 1)
+            if self.status == 5:
+                player1search = 1
+                player1heur = 1
+                player2heur = 1
+            # Matchup 2: Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)
+            elif self.status == 6:
+                player1heur = 3
+                player2heur = 2
+            # Matchup 3: Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1) 
+            elif self.status == 7:
+                player1heur = 4
+                player2heur = 1
+            # Matchup 4: Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1
+            elif self.status == 8:
+                player1heur = 3
+                player2heur = 1
+            # Matchup 5: Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)
+            elif self.status == 9:
+                player1heur = 4
+                player2heur = 2
+            # Matchup 6: Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 2) 
+            elif self.status == 10:
+                player1heur = 3
+                player2heur = 4
+
+            # Black piece
             if self.turn == 1:
                 start = time.process_time()
-                self.ai_move(2, 2)
-                self.P1_total_time += (time.process_time() - start)
-                self.P1_total_step += 1
-
-                print('P1_total_step = ', self.P1_total_step,
-                      'P1_expanded_total_nodes = ', self.P1_total_step+expandable,
-                      'P1_Win_move_Required = ', MoveWin,
-                      'P1_time_per_move = ', self.P1_total_time / self.P1_total_step,
-                      'Encountered enemy by p1=',self.P1_total_step)
+                self.ai_move(player1search, player1heur)
+                #self.ai_move(2, 1)
+                self.total_time_1 += (time.process_time() - start)
+                self.total_step_1 += 1
+                print('Player 1 total steps = ', self.total_step_1,"\n",
+                      'Player 1 total nodes traversed = ', self.P1_expanded_total_nodes, "\n",
+                        'Player 1 average nodes traversed per move = ', self.P1_expanded_total_nodes / self.total_step_1,"\n",
+                        'Player 1 average time taken per step = ', self.total_time_1 / self.total_step_1, "\n",
+                        'Player 1 has eaten = ', self.eat_piece,"\n")
+            # White piece
             elif self.turn == 2:
                 start = time.process_time()
-                self.ai_move(2, 2)
-                self.P2_total_time += (time.process_time() - start)
-                self.P2_total_step += 1
-
-                print('P2_total_step = ', self.P2_total_step,
-                      'P2_expanded_total_nodes = ', self.P2_total_step+expandable,
-                      'P2_Win_move_Required = ', MoveWin,
-                      'P2_Average_time_per_move = ', self.P2_total_time / self.P2_total_step,
-                      'Encountered enemy by p2=',self.P2_total_step)
+                self.ai_move(player2search, player2heur)
+                #self.ai_move(2, 2)
+                self.total_time_2 += (time.process_time() - start)
+                self.total_step_2 += 1
+                print('Player 2 total steps = ', self.total_step_2,"\n",
+                        'Player 2 total nodes traversed = ', self.P2_expanded_total_nodes, "\n",
+                        'Player 2 average nodes traversed per move = ', self.P2_expanded_total_nodes / self.total_step_2,"\n",
+                        'Player 2 average time taken per step = ', self.total_time_2 / self.total_step_2, "\n",
+                        'Player 2 has eaten: ', self.eat_piece,"\n")
 
         # Events accepting
         for event in pygame.event.get():
@@ -294,7 +338,7 @@ class BreakthroughGame:
     def play_minimax_vs_alphabeta_heuristic1(self,function_type):
         # Initialize game state
         game = BreakthroughGame()
-        print("Minimax (Offensive Heuristic 1) vs Alpha-beta (Offensive Heuristic 1)")
+        print(Colors.RED + "Minimax (Offensive Heuristic 1) vs Alpha-beta (Offensive Heuristic 1)")
         return
         # Initialize agents
         minimax_agent = MinimaxAgent(3, OffensiveHeuristic1(),4,function_type)
@@ -308,7 +352,7 @@ class BreakthroughGame:
     def play_alphabeta_heuristic2_vs_alphabeta_heuristic1(self,function_type):
         # Initialize game state
         game = BreakthroughGame()
-        print("Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
+        print( Colors.YELLOW + "Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
         return
         # Initialize agents
         alphabeta_agent_1 = AlphaBetaAgent(4, DefensiveHeuristic1(),4,function_type)
@@ -322,7 +366,7 @@ class BreakthroughGame:
     def play_alphabeta_defensive2_vs_alphabeta_offensive1(self,function_type):
         # Initialize game state
         game = BreakthroughGame()
-        print("Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)")
+        print(Colors.BLUE +"Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)")
         return
         # Initialize agents
         alphabeta_agent_1 = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
@@ -339,18 +383,18 @@ class BreakthroughGame:
 
         # Initialize agents
         alphabeta_agent_1 = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
-        alphabeta_agent_2 = AlphaBetaAgent(4, offensiveHeuristic2(),4,function_type)
+        alphabeta_agent_2 = AlphaBetaAgent(4, OffensiveHeuristic2(),4,function_type)
 
         # Play game
         winner = game(game, alphabeta_agent_2, alphabeta_agent_1)
 
-        print("Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)")
+        print(Colors.MAGENTA+ "Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)")
         print("Winner:", winner)
 
     def play_alphabeta_Defensive2_vs_alphabeta_Defensive1(self,function_type):
         # Initialize game state
         game = BreakthroughGame()
-        print("Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
+        print(Colors.CYAN+"Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
 
         return
         # Initialize agents
@@ -366,7 +410,7 @@ class BreakthroughGame:
     def play_alphabeta_Offensive2_vs_alphabeta_Defensive1(self,function_type):
         # Initialize game state
         game = BreakthroughGame()
-        print("Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
+        print(Colors.GREEN + "Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)")
         return
         # Initialize agents
         alphabeta_agent_1 = AlphaBetaAgent(4, OffensiveHeuristic1(),4,function_type)
@@ -411,9 +455,31 @@ class BreakthroughGame:
             if count1 <= 2 or count2 <= 2:
                 return True
         return False
-
+    
 def main():
     game = BreakthroughGame()
+
+    #Couldn't come up with a solution where I can implement button in the board that's why did it manually
+
+    #Minimax (Offensive Heuristic 1) vs Alpha-beta (Offensive Heuristic 1)
+    #game.play_minimax_vs_alphabeta_heuristic1(function_type=1)
+
+    #Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)
+    #game.play_alphabeta_heuristic2_vs_alphabeta_heuristic1(function_type=1)
+
+    #Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)
+    #game.play_alphabeta_defensive2_vs_alphabeta_offensive1(function_type=1)
+
+    #Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Offensive Heuristic 1)
+    #game.play_alphabeta_offensive2_vs_alphabeta_offensive1(function_type=1)
+
+    #Alpha-beta (Defensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 1)
+    #game.play_alphabeta_Defensive2_vs_alphabeta_Defensive1(function_type = 1)
+
+    #Alpha-beta (Offensive Heuristic 2) vs Alpha-beta (Defensive Heuristic 2)
+    game.play_alphabeta_Offensive2_vs_alphabeta_Defensive1(function_type=1)
+
+
 
     while 1:
         game.run()

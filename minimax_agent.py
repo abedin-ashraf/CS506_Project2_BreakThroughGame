@@ -1,4 +1,6 @@
 import numpy as np
+from model import *
+
 
 class MinimaxAgent:
     def __init__(self, boardmatrix, turn, depth, function, type=0):
@@ -100,22 +102,52 @@ def single_move(initial_pos, direction, turn):
         elif direction == 3:
             return initial_pos[0] - 1, initial_pos[1] + 1
 
-def OffensiveHeuristic1():
-    pass
+# def OffensiveHeuristic1():
+#     #Favor reducing opponent pieces
+#     return 2 * (30 - len(State.white_positions)) + np.random.random()
 
 
-def DefensiveHeuristic1():
-    pass
+# def DefensiveHeuristic1():
+#     #Favor preserving own pieces
+#     return 2 * len(State.black_positions) + np.random.random()
 
 
-def DefensiveHeuristic2():
-    pass
+
+# def DefensiveHeuristic2():
+#     #Custom defensive heuristic: prioritizes protecting baseline and overall count
+#     baseline_protection = sum(1 for pos in State.black_positions if pos[0] == 0)
+#     return 4 * len(State.black_positions) + baseline_protection
 
 
-def OffensiveHeuristic2():
-    pass
-def offensiveHeuristic2():
-    pass
+
+# def OffensiveHeuristic2():
+#     #Custom offensive heuristic: prioritizes advancing and reducing opponent's pieces.
+#     return 3 * sum(pos[0] for pos in State.black_positions) - len(State.white_positions)
+
+def OffensiveHeuristic1(state, turn):
+    if turn == 1:  # Black's turn
+        return 2 * (16 - len(state.white_positions)) + np.random.random()
+    else:  # White's turn
+        return 2 * (16 - len(state.black_positions)) + np.random.random()
+
+def DefensiveHeuristic1(state, turn):
+    if turn == 1:  # Black's turn
+        return len(state.black_positions) * 2 + np.random.random()
+    else:  # White's turn
+        return len(state.white_positions) * 2 + np.random.random()
+
+def OffensiveHeuristic2(state, turn):
+    if turn == 1:  # Black's turn
+        return 3 * (16 - len(state.white_positions)) + np.random.random()
+    else:  # White's turn
+        return 3 * (16 - len(state.black_positions)) + np.random.random()
+
+def DefensiveHeuristic2(state, turn):
+    if turn == 1:  # Black's turn
+        return len(state.black_positions) * 3 + np.random.random()
+    else:  # White's turn
+        return len(state.white_positions) * 3 + np.random.random()
+
 
 
 # Define a function to alternate the turn
@@ -457,5 +489,20 @@ class State:
 
     def defensive_function_long(self, turn):
         return self.myscore_long(turn) - 4 * self.enemyscore_long(turn)
+
+
+# def simulate_matchup(agent1, agent2, max_turns=100):
+#     state = State(boardmatrix=initial_boardmatrix, turn=1)
+#     turn = 0
+#     while state.isgoalstate() == 0 and turn < max_turns:
+#         if state.turn == 1:
+#             state, nodes1 = agent1.alpha_beta_decision()
+#         else:
+#             state, nodes2 = agent2.alpha_beta_decision()
+#         turn += 1
+
+#     winner = state.isgoalstate()
+#     print(f"Winner: {'Player 1' if winner == 1 else 'Player 2' if winner == 2 else 'Draw'}")
+#     return state.getMatrix(), winner, nodes1, nodes2
 
 
